@@ -120,6 +120,28 @@ class AirdropContract {
      * @param {uint128[]} constructorParams._amounts
      * @param {string} constructorParams._refund_lock_duration (uint256)
      */
+
+    async calcDeployData(constructorParams) {
+        const message = await this.client.contracts.createDeployMessage({
+            package: this.package,
+            constructorParams: constructorParams,
+            initParams: {},
+            keyPair: this.keys,
+        });
+
+        const response = await this.client.contracts.calcMsgProcessFees({
+            address: message.address,
+            message: message.message,
+            emulateBalance: true,
+            newAccount: true
+        });
+
+        return {
+            deployFee: parseInt(response.fees.totalAccountFees, 16) + 100, 
+            address: message.address
+        };
+    }
+
     async deploy(constructorParams) {
         if (!this.keys) {
             this.keys = await this.client.crypto.ed25519Keypair();

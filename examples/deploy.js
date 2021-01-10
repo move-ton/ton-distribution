@@ -1,3 +1,4 @@
+const fs = require('fs');
 const airdrop = require('./../contracts/airdropContract');
 
 const {
@@ -6,24 +7,38 @@ const {
 } = require('./utils');
 
 const config = getConfig();
-// console.log(config.constructorParams);
 
 (async () => {
   await ton.setup();
 
-  // Deploy contract
   try {
-    const message = (await ton.contracts.deploy({
-      package: airdrop.package,
-      constructorParams: config.constructorParams,
-      initParams: {},
-      keyPair: config.keys,
-    }));
+    const contract = new airdrop(ton, null, config.keys);
+    const info = await contract.calcDeployData(config.constructorParams);
+    console.log(`Deploy fee: ${info.deployFee / 10 ** 9}`);
 
-    console.log(`Contract deployed at ${message.address}`);
+    const sendFeeResponse = await ton.contracts.run({
+      address: config.feeWallet,
+      functionName: 'submitTransaction',
+      abi: config.feeWalletAbi,
+      input: {
+        dest: info.address, 
+        value: info.deployFee, 
+        bounce: false, 
+        allBalance: false, 
+        payload: ""
+      },
+      keyPair: config.feeWalletKeys
+    });
+    
+    const deployResponse = await contract.deploy(config.constructorParams);
+
+    fs.writeFileSync('deploy.json', JSON.stringify(info));
+    console.log(`Contract deployed at ${contract.address}`);
+    
+    process.exit(0);
+
   } catch (e) {
-    console.log(e);
+    console.error(e);
   }
-
-  process.exit(0);
+  
 })();

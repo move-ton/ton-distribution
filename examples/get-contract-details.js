@@ -14,7 +14,7 @@ checkContractAddress(config.contractAddress);
 
 (async () => {
   await ton.setup();
-  
+
   const contract = new airdrop(
     ton,
     config.contractAddress,
@@ -27,11 +27,11 @@ checkContractAddress(config.contractAddress);
   
   // Contract balance
   const { value0: contract_balance } = await contract.get_current_balanceLocal();
-  console.log(`Contract balance: ${parseInt(contract_balance, 16)}`);
+  console.log(`Contract balance: ${parseInt(contract_balance, 16) / 10 ** 9}`);
   
   // Required amount
   const { value0: required_amount } = await contract.get_required_amountLocal();
-  console.log(`Required amount for distribution: ${parseInt(required_amount, 16)}`);
+  console.log(`Required amount for distribution: ${parseInt(required_amount, 16) / 10 ** 9}`);
   
   const balance_status_string = parseInt(contract_balance, 16) > parseInt(required_amount, 16) ? 'Sufficient' : 'Unsufficient';
   
@@ -53,7 +53,7 @@ checkContractAddress(config.contractAddress);
   
   console.log('List of receivers and amounts:');
   addresses.map((address, address_index) => {
-    console.log(address_index, address, parseInt(amounts[address_index], 16));
+    console.log(address_index, address, parseInt(amounts[address_index], 16) / 10 ** 9);
   });
   
   process.exit(0);

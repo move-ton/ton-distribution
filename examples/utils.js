@@ -26,23 +26,33 @@ const getConfig = (includeRecords = true) => {
   let records;
   if (includeRecords) {
     // - Parse csv
-    records = parse(fs.readFileSync(data.addresses_and_amounts_csv));
+    records = parse(fs.readFileSync(data.payouts_csv));
   } else {
     records = [];
   }
   
   // - Parse keys
   const keys = JSON.parse(fs.readFileSync(data.keys));
-  
+  let info = {};
+  try {
+    info = JSON.parse(fs.readFileSync(data.contract_info));
+  } catch (e) {};
+
+  const msig_aliases = JSON.parse(fs.readFileSync(data.msig_alias_json));
+  const fee_wallet_keys = JSON.parse(fs.readFileSync(data.fee_wallet_keys));
+  const fee_wallet_abi = JSON.parse(fs.readFileSync(data.msig_abi));
   return {
     keys,
     constructorParams: {
-      _refund_destination: data.refund_destination,
+      _refund_destination: msig_aliases[data.refund_destination],
       _refund_lock_duration: data.refund_lock_duration_in_seconds,
       _addresses: records.map(i => i[0]),
       _amounts: records.map(i => parseInt(i[1], 10)),
     },
-    contractAddress: data.contractAddress,
+    contractAddress: info.address || "",
+    feeWalletAbi: fee_wallet_abi,
+    feeWallet: data.fee_wallet,
+    feeWalletKeys: fee_wallet_keys
   }
 };
 
@@ -65,10 +75,11 @@ const checkContractAddress = (address) => {
     );
   } catch (e) {
     console.log(e.message);
-    
     process.exit(1);
   }
 };
+
+
 
 module.exports = {
   ton,

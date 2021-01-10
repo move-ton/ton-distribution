@@ -7,11 +7,9 @@ const {
 
 (async () => {
   await ton.setup();
-
   const keys = await ton.crypto.ed25519Keypair();
+  fs.writeFileSync('keys.json', JSON.stringify(keys));
   
   console.log(`New keys written in the keys.json`);
-  console.log(keys);
-  
-  fs.writeFileSync('keys.json', JSON.stringify(keys));
+  process.exit(0);
 })();
